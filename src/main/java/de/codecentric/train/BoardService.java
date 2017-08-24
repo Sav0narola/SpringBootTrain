@@ -22,8 +22,7 @@ public class BoardService {
             List<Board> boards = new ArrayList<>();
             Board testBoard = new Board("1", "TestBoard");
             boards.add(testBoard);
-            checkForCheck();
-            //throw new BoardRequestException("wut");
+            validateException();
             return boards;
         } catch (RuntimeException e) {
             e.printStackTrace();
@@ -31,11 +30,11 @@ public class BoardService {
         }
     }
 
-    public void checkForCheck() throws BoardRequestException {
+    public void validateException() throws BoardRequestException {
         try {
             randomizer.checkForExceptions();
         } catch (TimeoutException e) {
-            throw new BoardRequestException("Yehaw");
+            throw new BoardRequestException("This is the Test-Exception");
         }
     }
 }
