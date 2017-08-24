@@ -4,3 +4,4 @@ settings.gradle
 SpringBootTrain.iml
 lib/
 target/
+*iml
