@@ -1,5 +1,8 @@
 package de.codecentric.train.boards;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Board {
 
     private String id;

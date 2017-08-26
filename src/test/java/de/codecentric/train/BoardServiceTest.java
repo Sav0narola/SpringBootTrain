@@ -3,28 +3,37 @@ package de.codecentric.train;
 
 import de.codecentric.train.boards.Board;
 import de.codecentric.train.boards.BoardRequestException;
-import de.codecentric.train.boards.Randomizer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BoardServiceTest {
+    private static final String ANY_BOARD_NAME = "My board";
+    private static final String ANY_ID = "anyId";
+    private static final String FIREBASE_URL = "https://goodurl.firebaseio.com/boards.json";
 
     @Mock
-    private Randomizer randomizer;
+    private RestTemplate restTemplate;
 
     @InjectMocks
-    private BoardService boardService;
+    private FirebaseBoardService boardService;
 
     @Test
     public void getBoardsReturnsListOfBoards() throws BoardRequestException {
@@ -33,27 +42,34 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void getBoardsReturnsExactlyOneEntry() throws BoardRequestException {
-        List<Board> boards = boardService.getBoards();
-        assertThat(boards).hasSize(1);
+    public void getBoardUsesRestTemplateToRequestForBoards() throws BoardRequestException {
+        boardService.getBoards();
+
+        verify(restTemplate).exchange(FIREBASE_URL, HttpMethod.GET, null,
+                new ParameterizedTypeReference<Map<String, Board>>() {
+                });
     }
 
     @Test
-    public void getBoardsReturnsEntryWithNameTestBoard() throws BoardRequestException {
-        List<Board> boards = boardService.getBoards();
-        assertThat(boards.get(0).getName()).isEqualTo("TestBoard");
+    public void responseIsTranslatedIntoList() throws BoardRequestException {
+        Board testBoard = new Board(ANY_ID, ANY_BOARD_NAME);
+
+        when(restTemplate.exchange(
+                anyString(), any(), any(), eq(new ParameterizedTypeReference<Map<String, Board>>() {
+                })))
+                .thenReturn(createResponseEntityWithGivenBoard(testBoard));
+
+        List<Board> actualBoards = boardService.getBoards();
+
+        assertThat(actualBoards).contains(testBoard);
     }
 
-    @Test
-    public void getBoardsUsesRandomizerToSimulateTimeoutExceptions() throws BoardRequestException, TimeoutException {
-        boardService.getBoards();
-        verify(randomizer).checkForExceptions();
+    private ResponseEntity<Map<String, Board>> createResponseEntityWithGivenBoard(Board testBoard) {
+        Map<String, Board> boards = new HashMap<>();
+        boards.put("anyKey", testBoard);
+
+        return new ResponseEntity<>(boards, HttpStatus.OK);
     }
 
-    @Test(expected = BoardRequestException.class)
-    public void TimeoutExceptionsAreTransformedIntoBoardRequestExceptions() throws BoardRequestException, TimeoutException {
-        doThrow(TimeoutException.class).when(randomizer).checkForExceptions();
-        boardService.getBoards();
-    }
 
 }
