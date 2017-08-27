@@ -19,7 +19,7 @@ import java.util.Map;
 public class FirebaseBoardService implements BoardService {
 
     @Value("${firebase.boardsUrl}")
-    private String BOARDS_URL;
+    private String boardsUrl;
 
     private final ParameterizedTypeReference<Map<String, Board>> TYPE_REFERENCE =
     new ParameterizedTypeReference<Map<String, Board>>() {};
@@ -30,7 +30,7 @@ public class FirebaseBoardService implements BoardService {
     @Override
     public List<Board> getBoards() throws BoardRequestException {
         ResponseEntity<Map<String, Board>> boards =
-                restTemplate.exchange(BOARDS_URL, HttpMethod.POST,
+                restTemplate.exchange(boardsUrl, HttpMethod.GET,
                         null, TYPE_REFERENCE);
         if (boards != null) {
             return new ArrayList<>(boards.getBody().values());

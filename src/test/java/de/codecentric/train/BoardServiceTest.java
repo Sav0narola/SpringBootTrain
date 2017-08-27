@@ -3,6 +3,7 @@ package de.codecentric.train;
 
 import de.codecentric.train.boards.Board;
 import de.codecentric.train.boards.BoardRequestException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -12,8 +13,10 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.RestTemplate;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +37,13 @@ public class BoardServiceTest {
 
     @InjectMocks
     private FirebaseBoardService boardService;
+
+    @Before
+    public void setup() {
+        Field boardsUrlField = ReflectionUtils.findField(FirebaseBoardService.class, "boardsUrl");
+        ReflectionUtils.makeAccessible(boardsUrlField);
+        ReflectionUtils.setField(boardsUrlField, boardService, FIREBASE_URL);
+    }
 
     @Test
     public void getBoardsReturnsListOfBoards() throws BoardRequestException {
